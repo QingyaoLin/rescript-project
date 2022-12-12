@@ -1,9 +1,9 @@
 # rescript-project
 
 ## Help
-···
+```
 npm run -w <workspace-name>
-···
+```
 
 ## Build
 ```
