@@ -86,7 +86,7 @@ module Ir1 = {
         `Ir1.Mul(${s1}, ${s2})`
       }
 
-    | Var(index) => j`Var($index)`
+    | Var(index) => j`Ir1.Var($index)`
     | Let(expr1, expr2) => {
         let s1 = tostring(expr1)
         let s2 = tostring(expr2)
@@ -124,6 +124,84 @@ module ConvertIr0 = {
   }
 }
 
+// Ir1 => Instr0
+// 相关semantic:
+//          (Var(n);c, s) --> (c, s[n]::s)
+//          (Pop;c, v::s) --> (c, s)
+//    (Swap;c, v1::v2::s) --> (c, V2::v1::s)
+module Instr1 = {
+  type instr =
+    | Add
+    | Mul
+    | Cst(int)
+    | Var(int)
+    | Pop
+    | Swap
+
+  type instrs = list<instr>
+  type operand = int
+  type stack = list<operand>
+
+  let addressing = (index, stack: stack) => {
+    Belt.Option.getExn(stack->Belt.List.get(index))
+  }
+
+  let pop = (stack: stack) => {
+    Belt.List.tailExn(stack)
+  }
+
+  let rec eval = (instrs: instrs, stack: stack): int => {
+    switch (instrs, stack) {
+    | (list{Cst(i), ...rest}, _) => eval(rest, list{i, ...stack})
+    | (list{Add, ...rest}, list{operand1, operand2, ...stack}) =>
+      eval(rest, list{operand1 + operand2, ...stack})
+    | (list{Mul, ...rest}, list{operand1, operand2, ...stack}) =>
+      eval(rest, list{operand1 * operand2, ...stack})
+    | (list{Var(n), ...rest}, _) => eval(rest, list{addressing(n, stack), ...stack})
+    | (list{Pop, ...rest}, _) => eval(rest, pop(stack))
+    | (list{Swap, ...rest}, list{operand1, operand2, ...stack}) =>
+      eval(rest, list{operand2, operand1, ...stack})
+    | (list{}, list{result, ..._}) => result
+    | _ => assert false
+    }
+  }
+
+  // let rec tostring = instrs => {
+
+  // }
+}
+
+// Let("x", Cst(1), Add(Var("x"),Var("x")))
+// =>
+// [Cst(1);Var(0);Var(1);Swap;Pop]
+
+module Compiler = {
+  // Ir1 => Intrs1
+  let rec compileIr1 = (expr: Ir1.expr): Instr1.instrs => {
+    switch expr {
+    | Cst(i) => list{Cst(i)}
+    | Add(expr1, expr2) => {
+        let target1 = compileIr1(expr1)
+        let target2 = compileIr1(expr2)
+        Belt.List.concatMany([target1, target2, list{Add}])
+      }
+
+    | Mul(expr1, expr2) => {
+        let target1 = compileIr1(expr1)
+        let target2 = compileIr1(expr2)
+        Belt.List.concatMany([target1, target2, list{Mul}])
+      }
+
+    | Var(n) => list{Var(n)}
+    | Let(expr1, expr2) => {
+        let target1 = compileIr1(expr1)
+        let target2 = compileIr1(expr2)
+        Belt.List.concatMany([target1, target2, list{Swap, Pop}])
+      }
+    }
+  }
+}
+
 module Test = {
   let check_convert = (expr: Ir0.expr) => {
     let ir0_result = Ir0.eval(expr, list{})
@@ -135,20 +213,62 @@ module Test = {
     assert (ir0_result == ir1_result)
   }
 
-  let test1 = () => {
+  let check_compile = (expr: Ir0.expr) => {
+    let ir1_expr = ConvertIr0.convert(expr, list{})
+    let ir1_result = Ir1.eval(ir1_expr, list{})
+
+    let instrs0 = Compiler.compileIr1(ir1_expr)
+    let instr_result = Instr1.eval(instrs0, list{})
+
+    assert (ir1_result == instr_result)
+  }
+
+  let test_convert = () => {
     let expr_array = [
       Ir0.Cst(10),
       Add(Cst(10), Let("x", Cst(20), Add(Var("x"), Cst(50)))),
       Mul(Cst(10), Let("x", Cst(20), Add(Var("x"), Cst(50)))),
       Let("x", Let("x", Cst(1), Add(Var("x"), Var("x"))), Var("x")),
       Let("x", Cst(10), Let("x", Add(Var("x"), Var("x")), Var("x"))),
+      Let("x", Cst(1), Add(Var("x"), Var("x"))),
     ]
 
     Belt.Array.forEachWithIndex(expr_array, (index, expr) => {
       check_convert(expr)
       Js.log(j`Test $index: ` ++ "Ir0 convert to Ir1 is passed!")
     })
+
+    Js.log("")
+  }
+
+  let test_instr1 = () => {
+    let instrs = list{Instr1.Cst(10), Var(0), Add, Var(0), Swap, Pop}
+    let result = Instr1.eval(instrs, list{})
+
+    assert (result == 20)
+
+    Js.log("Test test_instr0 passed!\n")
+  }
+
+  let test_compile = () => {
+    let expr_array = [
+      Ir0.Cst(10),
+      Add(Cst(10), Let("x", Cst(20), Add(Var("x"), Cst(50)))),
+      Mul(Cst(10), Let("x", Cst(20), Add(Var("x"), Cst(50)))),
+      Let("x", Let("x", Cst(1), Add(Var("x"), Var("x"))), Var("x")),
+      Let("x", Cst(10), Let("x", Add(Var("x"), Var("x")), Var("x"))),
+      Let("x", Cst(1), Add(Var("x"), Var("x"))),
+    ]
+
+    Belt.Array.forEachWithIndex(expr_array, (index, expr) => {
+      check_compile(expr)
+      Js.log(j`Test $index: ` ++ "Ir1 compile to Instr1 is passed!")
+    })
+
+    Js.log("")
   }
 }
 
-Test.test1()
+Test.test_convert()
+Test.test_instr1()
+Test.test_compile()
