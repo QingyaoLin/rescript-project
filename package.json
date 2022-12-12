@@ -1,0 +1,21 @@
+{
+  "name": "rescript-project",
+  "version": "1.0.0",
+  "description": "张宏波程序设计与描述相关的实验",
+  "scripts": {
+    "help": "echo \"please use `npm run -w <workspace-name>` according to related commands\""
+  },
+  "author": "",
+  "license": "MIT",
+  "workspaces": [
+    "lab0",
+    "lab1"
+  ],
+  "dependencies": {
+    "lab0": "^0.1.0",
+    "lab1": "^0.1.0"
+  },
+  "devDependencies": {
+    "rescript": "^10.0.1"
+  }
+}
