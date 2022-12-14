@@ -1,3 +1,11 @@
+// HomeWork:
+// 1. Ir0 => Ir1
+//    - eval      √
+//    - tostring  √
+// 2. Ir1 => Instr0
+//    - eval      √
+//    - tostring  √
+
 // Var(string) 表示使用这个变量，即 GET
 // Let(string, expr1, expr2) 表示一个变量绑定表达式:
 // example: let x = 2 in x + 7 end
@@ -12,45 +20,45 @@ module Ir0 = {
     | Var(string)
     | Let(string, expr, expr)
 
-  let assoc = (variable: string, env: list<(string, int)>) => {
-    Belt.Option.getExn(env->Belt.List.getAssoc(variable, (k, item) => k == item))
-  }
-
-  let rec eval = (expr, env: env): int => {
-    switch expr {
-    | Cst(i) => i
-    | Add(expr1, expr2) => eval(expr1, env) + eval(expr2, env)
-    | Mul(expr1, expr2) => eval(expr1, env) * eval(expr2, env)
-    | Var(variable) => assoc(variable, env)
-    | Let(variable, expr1, expr2) => eval(expr2, list{(variable, eval(expr1, env)), ...env})
+  let eval = (expr): int => {
+    let rec compile = (expr, env) => {
+      switch expr {
+      | Cst(i) => i
+      | Add(expr1, expr2) => compile(expr1, env) + compile(expr2, env)
+      | Mul(expr1, expr2) => compile(expr1, env) * compile(expr2, env)
+      | Var(variable) => List.assoc(variable, env)
+      | Let(variable, expr1, expr2) => compile(expr2, list{(variable, compile(expr1, env)), ...env})
+      }
     }
+    compile(expr, list{})
   }
 
   let rec tostring = (expr): string => {
     switch expr {
-    | Cst(i) => j`Ir0.Cst($i)`
+    | Cst(i) => j`Cst($i)`
     | Add(expr1, expr2) => {
         let s1 = tostring(expr1)
         let s2 = tostring(expr2)
-        `Ir0.Add(${s1}, ${s2})`
+        `Add(${s1}, ${s2})`
       }
 
     | Mul(expr1, expr2) => {
         let s1 = tostring(expr1)
         let s2 = tostring(expr2)
-        `Ir0.Mul(${s1}, ${s2})`
+        `Mul(${s1}, ${s2})`
       }
 
-    | Var(variable) => `Ir0.Var("${variable}")`
+    | Var(variable) => `Var("${variable}")`
     | Let(variable, expr1, expr2) => {
         let s1 = tostring(expr1)
         let s2 = tostring(expr2)
-        j`Ir0.Let("${variable}", ${s1}, ${s2})`
+        j`Let("${variable}", ${s1}, ${s2})`
       }
     }
   }
 }
 
+// 改为通过索引查找变量的值
 module Ir1 = {
   type env = list<int>
 
@@ -61,70 +69,85 @@ module Ir1 = {
     | Var(int)
     | Let(expr, expr)
 
-  let rec eval = (expr, env) => {
-    switch expr {
-    | Cst(i) => i
-    | Add(expr1, expr2) => eval(expr1, env) + eval(expr2, env)
-    | Mul(expr1, expr2) => eval(expr1, env) * eval(expr2, env)
-    | Var(n) => List.nth(env, n)
-    | Let(expr1, expr2) => eval(expr2, list{eval(expr1, env), ...env})
+  let eval = expr => {
+    let rec compile = (expr, env) => {
+      switch expr {
+      | Cst(i) => i
+      | Add(expr1, expr2) => compile(expr1, env) + compile(expr2, env)
+      | Mul(expr1, expr2) => compile(expr1, env) * compile(expr2, env)
+      | Var(n) => List.nth(env, n)
+      | Let(expr1, expr2) => compile(expr2, list{compile(expr1, env), ...env})
+      }
     }
+    compile(expr, list{})
   }
 
   let rec tostring = (expr): string => {
     switch expr {
-    | Cst(i) => j`Ir1.Cst($i)`
+    | Cst(i) => j`Cst($i)`
     | Add(expr1, expr2) => {
         let s1 = tostring(expr1)
         let s2 = tostring(expr2)
-        `Ir1.Add(${s1}, ${s2})`
+        `Add(${s1}, ${s2})`
       }
 
     | Mul(expr1, expr2) => {
         let s1 = tostring(expr1)
         let s2 = tostring(expr2)
-        `Ir1.Mul(${s1}, ${s2})`
+        `Mul(${s1}, ${s2})`
       }
 
-    | Var(index) => j`Ir1.Var($index)`
+    | Var(index) => j`Var($index)`
     | Let(expr1, expr2) => {
         let s1 = tostring(expr1)
         let s2 = tostring(expr2)
-        j`Ir1.Let(${s1}, ${s2})`
+        j`Let(${s1}, ${s2})`
       }
     }
   }
 }
 
-module ConvertIr0 = {
+let rec index = (l: list<'a>, x: 'a, n: int) => {
+  switch (l, n) {
+  | (list{hd, ...rest}, 0) =>
+    if hd == x {
+      0
+    } else {
+      1 + index(rest, x, 0)
+    }
+
+  | (list{hd, ...rest}, n) =>
+    if hd == x {
+      1 + index(rest, x, n - 1)
+    } else {
+      1 + index(rest, x, n)
+    }
+
+  | _ => assert false
+  }
+}
+
+// 将 Ir0 => Ir1
+module Interpreter0 = {
   type cenv = list<string>
 
-  let index = (s: string, list: list<string>): int => {
-    let count = ref(0)
+  let convert = expr => {
+    let rec compile = (expr: Ir0.expr, env: cenv): Ir1.expr => {
+      switch expr {
+      | Cst(i) => Ir1.Cst(i)
+      | Add(expr1, expr2) => Ir1.Add(compile(expr1, env), compile(expr2, env))
+      | Mul(expr1, expr2) => Ir1.Mul(compile(expr1, env), compile(expr2, env))
+      | Var(variable) => Ir1.Var(index(env, variable, 0))
 
-    for i in 0 to Belt.List.length(list) - 1 {
-      if s != Belt.Option.getExn(list->Belt.List.get(i)) {
-        count := i
+      | Let(variable, expr1, expr2) =>
+        Ir1.Let(compile(expr1, env), compile(expr2, list{variable, ...env}))
       }
     }
-
-    count.contents
-  }
-
-  let rec convert = (expr: Ir0.expr, env: cenv): Ir1.expr => {
-    switch expr {
-    | Cst(i) => Ir1.Cst(i)
-    | Add(expr1, expr2) => Ir1.Add(convert(expr1, env), convert(expr2, env))
-    | Mul(expr1, expr2) => Ir1.Mul(convert(expr1, env), convert(expr2, env))
-    | Var(variable) => Ir1.Var(index(variable, env))
-
-    | Let(variable, expr1, expr2) =>
-      Ir1.Let(convert(expr1, env), convert(expr2, list{variable, ...env}))
-    }
+    compile(expr, list{})
   }
 }
 
-// Ir1 => Instr0
+// Ir1 => Instr1
 // 相关semantic:
 //          (Var(n);c, s) --> (c, s[n]::s)
 //          (Pop;c, v::s) --> (c, s)
@@ -142,133 +165,158 @@ module Instr1 = {
   type operand = int
   type stack = list<operand>
 
-  let addressing = (index, stack: stack) => {
-    Belt.Option.getExn(stack->Belt.List.get(index))
+  let get = (index, stack: stack) => {
+    List.nth(stack, index)
   }
 
   let pop = (stack: stack) => {
     Belt.List.tailExn(stack)
   }
 
-  let rec eval = (instrs: instrs, stack: stack): int => {
-    switch (instrs, stack) {
-    | (list{Cst(i), ...rest}, _) => eval(rest, list{i, ...stack})
-    | (list{Add, ...rest}, list{operand1, operand2, ...stack}) =>
-      eval(rest, list{operand1 + operand2, ...stack})
-    | (list{Mul, ...rest}, list{operand1, operand2, ...stack}) =>
-      eval(rest, list{operand1 * operand2, ...stack})
-    | (list{Var(n), ...rest}, _) => eval(rest, list{addressing(n, stack), ...stack})
-    | (list{Pop, ...rest}, _) => eval(rest, pop(stack))
-    | (list{Swap, ...rest}, list{operand1, operand2, ...stack}) =>
-      eval(rest, list{operand2, operand1, ...stack})
-    | (list{}, list{result, ..._}) => result
-    | _ => assert false
+  let eval = instrs => {
+    let rec interpret = (instrs: instrs, stack: stack): int => {
+      switch (instrs, stack) {
+      | (list{Cst(i), ...rest}, _) => interpret(rest, list{i, ...stack})
+      | (list{Add, ...rest}, list{operand1, operand2, ...stack}) =>
+        interpret(rest, list{operand1 + operand2, ...stack})
+      | (list{Mul, ...rest}, list{operand1, operand2, ...stack}) =>
+        interpret(rest, list{operand1 * operand2, ...stack})
+      | (list{Var(n), ...rest}, _) => interpret(rest, list{get(n, stack), ...stack})
+      | (list{Pop, ...rest}, _) => interpret(rest, pop(stack))
+      | (list{Swap, ...rest}, list{operand1, operand2, ...stack}) =>
+        interpret(rest, list{operand2, operand1, ...stack})
+      | (list{}, list{result, ..._}) => result
+      | _ => assert false
+      }
     }
+
+    interpret(instrs, list{})
   }
 
-  // let rec tostring = instrs => {
-
-  // }
+  let rec tostring = instrs => {
+    switch instrs {
+    | list{Cst(i), ...rest} => j`Cst($i);` ++ tostring(rest)
+    | list{Add, ...rest} => "Add;" ++ tostring(rest)
+    | list{Mul, ...rest} => "Mul;" ++ tostring(rest)
+    | list{Var(n), ...rest} => j`Var($n);` ++ tostring(rest)
+    | list{Pop, ...rest} => "Pop;" ++ tostring(rest)
+    | list{Swap, ...rest} => "Swap;" ++ tostring(rest)
+    | list{} => ""
+    }
+  }
 }
 
-// Let("x", Cst(1), Add(Var("x"),Var("x")))
-// =>
-// [Cst(1);Var(0);Var(1);Swap;Pop]
-
 module Compiler = {
-  // Ir1 => Intrs1
-  let rec compileIr1 = (expr: Ir1.expr): Instr1.instrs => {
-    switch expr {
-    | Cst(i) => list{Cst(i)}
-    | Add(expr1, expr2) => {
-        let target1 = compileIr1(expr1)
-        let target2 = compileIr1(expr2)
-        Belt.List.concatMany([target1, target2, list{Add}])
-      }
+  // 是临时，还是本地变量
+  type varType = Temp | Local
 
-    | Mul(expr1, expr2) => {
-        let target1 = compileIr1(expr1)
-        let target2 = compileIr1(expr2)
-        Belt.List.concatMany([target1, target2, list{Mul}])
-      }
+  // Ir0 => Ir1 => Instr1
+  // Let("x", Cst(1), Add(Var("x"),Var("x")))
+  // =>
+  // Let(Cst(1), Add(Var(0),Var(0)))
+  // =>
+  // [Cst(1);Var(0);Var(1);Add;Swap;Pop]
+  let compileIr0 = (expr: Ir0.expr) => {
+    let toIr1 = Interpreter0.convert(expr)
 
-    | Var(n) => list{Var(n)}
-    | Let(expr1, expr2) => {
-        let target1 = compileIr1(expr1)
-        let target2 = compileIr1(expr2)
-        Belt.List.concatMany([target1, target2, list{Swap, Pop}])
+    let rec toInstrs1 = (expr, cenv: list<varType>): Instr1.instrs => {
+      switch expr {
+      | Ir1.Cst(i) => list{Instr1.Cst(i)}
+      | Add(expr1, expr2) => {
+          let target1 = toInstrs1(expr1, cenv)
+          let target2 = toInstrs1(expr2, list{Temp, ...cenv})
+          Belt.List.concatMany([target1, target2, list{Add}])
+        }
+
+      | Mul(expr1, expr2) => {
+          let target1 = toInstrs1(expr1, cenv)
+          let target2 = toInstrs1(expr2, list{Temp, ...cenv})
+          Belt.List.concatMany([target1, target2, list{Mul}])
+        }
+
+      | Var(n) => list{Var(index(cenv, Local, n))}
+      | Let(expr1, expr2) => {
+          let target1 = toInstrs1(expr1, cenv)
+          let target2 = toInstrs1(expr2, list{Local, ...cenv})
+          Belt.List.concatMany([target1, target2, list{Swap, Pop}])
+        }
       }
     }
+
+    toInstrs1(toIr1, list{})
   }
 }
 
 module Test = {
-  let check_convert = (expr: Ir0.expr) => {
-    let ir0_result = Ir0.eval(expr, list{})
+  module Exple1 = {
+    let ir0 = Ir0.Let("x", Cst(1), Add(Var("x"), Var("x")))
+    let ir1 = Ir1.Let(Cst(1), Add(Var(0), Var(0)))
+    let instrs1 = list{Instr1.Cst(1), Var(0), Var(1), Add, Swap, Pop}
 
-    let ir1_expr = ConvertIr0.convert(expr, list{})
+    let ir1_str = Ir1.tostring(ir1)
+    let instrs1_str = Instr1.tostring(instrs1)
 
-    let ir1_result = Ir1.eval(ir1_expr, list{})
-
-    assert (ir0_result == ir1_result)
+    let ir0_result = Ir0.eval(ir0)
+    let ir1_result = Ir1.eval(ir1)
   }
 
-  let check_compile = (expr: Ir0.expr) => {
-    let ir1_expr = ConvertIr0.convert(expr, list{})
-    let ir1_result = Ir1.eval(ir1_expr, list{})
+  module Exple2 = {
+    let ir0 = Ir0.Add(Cst(1), Let("x", Cst(2), Add(Var("x"), Cst(7))))
+    let ir1 = Ir1.Add(Cst(1), Let(Cst(2), Add(Var(0), Cst(7))))
+    let instrs1 = list{Instr1.Cst(1), Cst(2), Var(0), Cst(7), Add, Swap, Pop, Add}
 
-    let instrs0 = Compiler.compileIr1(ir1_expr)
-    let instr_result = Instr1.eval(instrs0, list{})
+    let ir1_str = Ir1.tostring(ir1)
+    let instrs1_str = Instr1.tostring(instrs1)
 
-    assert (ir1_result == instr_result)
+    let ir0_result = Ir0.eval(ir0)
+    let ir1_result = Ir1.eval(ir1)
   }
 
-  let test_convert = () => {
-    let expr_array = [
-      Ir0.Cst(10),
-      Add(Cst(10), Let("x", Cst(20), Add(Var("x"), Cst(50)))),
-      Mul(Cst(10), Let("x", Cst(20), Add(Var("x"), Cst(50)))),
-      Let("x", Let("x", Cst(1), Add(Var("x"), Var("x"))), Var("x")),
-      Let("x", Cst(10), Let("x", Add(Var("x"), Var("x")), Var("x"))),
-      Let("x", Cst(1), Add(Var("x"), Var("x"))),
-    ]
+  // 检查 解释器实现 是否正确
+  let check_interpreter = () => {
+    let test_interpreter0 = () => {
+      // test Exple1
+      let ir0_to_ir1 = Interpreter0.convert(Exple1.ir0)
 
-    Belt.Array.forEachWithIndex(expr_array, (index, expr) => {
-      check_convert(expr)
-      Js.log(j`Test $index: ` ++ "Ir0 convert to Ir1 is passed!")
-    })
+      assert (Exple1.ir1_str == Ir1.tostring(ir0_to_ir1))
+      assert (Exple1.ir1_result == Ir1.eval(ir0_to_ir1))
 
-    Js.log("")
+      // test Exple2
+      let ir0_to_ir1 = Interpreter0.convert(Exple2.ir0)
+
+      assert (Exple2.ir1_str == Ir1.tostring(ir0_to_ir1))
+      assert (Exple2.ir1_result == Ir1.eval(ir0_to_ir1))
+      Js.log("test_interpreter0() is successful!")
+    }
+
+    test_interpreter0()
   }
 
-  let test_instr1 = () => {
-    let instrs = list{Instr1.Cst(10), Var(0), Add, Var(0), Swap, Pop}
-    let result = Instr1.eval(instrs, list{})
+  let check_compiler = () => {
+    // Ir0 => Ir1 => Instr1
+    let test_compileIr0 = () => {
+      // test Exple1
+      let instrs1 = Compiler.compileIr0(Exple1.ir0)
 
-    assert (result == 20)
+      assert (Instr1.eval(instrs1) == Exple1.ir0_result)
+      assert (Instr1.tostring(instrs1) == Exple1.instrs1_str)
 
-    Js.log("Test test_instr0 passed!\n")
+      // test Exple2
+      let instrs1 = Compiler.compileIr0(Exple2.ir0)
+
+      assert (Instr1.eval(instrs1) == Exple2.ir0_result)
+      assert (Instr1.tostring(instrs1) == Exple2.instrs1_str)
+
+      Js.log("test_compileIr0() is successful!")
+    }
+
+    test_compileIr0()
   }
 
-  let test_compile = () => {
-    let expr_array = [
-      Ir0.Cst(10),
-      Add(Cst(10), Let("x", Cst(20), Add(Var("x"), Cst(50)))),
-      Mul(Cst(10), Let("x", Cst(20), Add(Var("x"), Cst(50)))),
-      Let("x", Let("x", Cst(1), Add(Var("x"), Var("x"))), Var("x")),
-      Let("x", Cst(10), Let("x", Add(Var("x"), Var("x")), Var("x"))),
-      Let("x", Cst(1), Add(Var("x"), Var("x"))),
-    ]
-
-    Belt.Array.forEachWithIndex(expr_array, (index, expr) => {
-      check_compile(expr)
-      Js.log(j`Test $index: ` ++ "Ir1 compile to Instr1 is passed!")
-    })
-
-    Js.log("")
+  let test = () => {
+    check_interpreter()
+    check_compiler()
   }
 }
 
-Test.test_convert()
-Test.test_instr1()
-Test.test_compile()
+Test.test()
