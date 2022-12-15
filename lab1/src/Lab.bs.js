@@ -137,64 +137,168 @@ function index(l, x, n) {
         RE_EXN_ID: "Assert_failure",
         _1: [
           "Lab.res",
-          126,
+          134,
           9
         ],
         Error: new Error()
       };
 }
 
-function convert(expr) {
-  var compile = function (expr, env) {
-    switch (expr.TAG | 0) {
-      case /* Add */0 :
-          return {
-                  TAG: /* Add */0,
-                  _0: compile(expr._0, env),
-                  _1: compile(expr._1, env)
+var pop = Belt_List.tailExn;
+
+function $$eval$2(instrs) {
+  var _instrs = instrs;
+  var _stack = /* [] */0;
+  var _senv = /* [] */0;
+  while(true) {
+    var senv = _senv;
+    var stack = _stack;
+    var instrs$1 = _instrs;
+    if (instrs$1) {
+      var i = instrs$1.hd;
+      if (typeof i === "number") {
+        switch (i) {
+          case /* Add */0 :
+              if (stack) {
+                var match = stack.tl;
+                if (match) {
+                  _stack = {
+                    hd: stack.hd + match.hd | 0,
+                    tl: match.tl
+                  };
+                  _instrs = instrs$1.tl;
+                  continue ;
+                }
+                
+              }
+              break;
+          case /* Mul */1 :
+              if (stack) {
+                var match$1 = stack.tl;
+                if (match$1) {
+                  _stack = {
+                    hd: Math.imul(stack.hd, match$1.hd),
+                    tl: match$1.tl
+                  };
+                  _instrs = instrs$1.tl;
+                  continue ;
+                }
+                
+              }
+              break;
+          case /* Pop */2 :
+              _stack = Belt_List.tailExn(stack);
+              _instrs = instrs$1.tl;
+              continue ;
+          case /* Swap */3 :
+              if (stack) {
+                var match$2 = stack.tl;
+                if (match$2) {
+                  _stack = {
+                    hd: match$2.hd,
+                    tl: {
+                      hd: stack.hd,
+                      tl: match$2.tl
+                    }
+                  };
+                  _instrs = instrs$1.tl;
+                  continue ;
+                }
+                
+              }
+              break;
+          
+        }
+      } else {
+        switch (i.TAG | 0) {
+          case /* Cst */0 :
+              _stack = {
+                hd: i._0,
+                tl: stack
+              };
+              _instrs = instrs$1.tl;
+              continue ;
+          case /* Var */1 :
+              _stack = {
+                hd: List.assoc(i._0, senv),
+                tl: stack
+              };
+              _instrs = instrs$1.tl;
+              continue ;
+          case /* Let */2 :
+              if (stack) {
+                _senv = {
+                  hd: [
+                    i._0,
+                    stack.hd
+                  ],
+                  tl: senv
                 };
-      case /* Mul */1 :
-          return {
-                  TAG: /* Mul */1,
-                  _0: compile(expr._0, env),
-                  _1: compile(expr._1, env)
-                };
-      case /* Cst */2 :
-          return {
-                  TAG: /* Cst */2,
-                  _0: expr._0
-                };
-      case /* Var */3 :
-          return {
-                  TAG: /* Var */3,
-                  _0: index(env, expr._0, 0)
-                };
-      case /* Let */4 :
-          return {
-                  TAG: /* Let */4,
-                  _0: compile(expr._1, env),
-                  _1: compile(expr._2, {
-                        hd: expr._0,
-                        tl: env
-                      })
-                };
-      
+                _instrs = instrs$1.tl;
+                continue ;
+              }
+              break;
+          
+        }
+      }
+    } else if (stack) {
+      return stack.hd;
     }
+    throw {
+          RE_EXN_ID: "Assert_failure",
+          _1: [
+            "Lab.res",
+            175,
+            13
+          ],
+          Error: new Error()
+        };
   };
-  return compile(expr, /* [] */0);
 }
 
-var Interpreter0 = {
-  convert: convert
+function tostring$2(instrs) {
+  if (!instrs) {
+    return "";
+  }
+  var i = instrs.hd;
+  if (typeof i === "number") {
+    switch (i) {
+      case /* Add */0 :
+          return "Add;" + tostring$2(instrs.tl);
+      case /* Mul */1 :
+          return "Mul;" + tostring$2(instrs.tl);
+      case /* Pop */2 :
+          return "Pop;" + tostring$2(instrs.tl);
+      case /* Swap */3 :
+          return "Swap;" + tostring$2(instrs.tl);
+      
+    }
+  } else {
+    switch (i.TAG | 0) {
+      case /* Cst */0 :
+          return "Cst(" + i._0 + ");" + tostring$2(instrs.tl);
+      case /* Var */1 :
+          return "Var(" + i._0 + ");" + tostring$2(instrs.tl);
+      case /* Let */2 :
+          return "Let(" + i._0 + ");" + tostring$2(instrs.tl);
+      
+    }
+  }
+}
+
+var Instrs0 = {
+  pop: pop,
+  $$eval: $$eval$2,
+  tostring: tostring$2
 };
 
 function get(index, stack) {
   return List.nth(stack, index);
 }
 
-var pop = Belt_List.tailExn;
+var pop$1 = Belt_List.tailExn;
 
-function $$eval$2(instrs) {
+function $$eval$3(instrs) {
   var _instrs = instrs;
   var _stack = /* [] */0;
   while(true) {
@@ -278,7 +382,7 @@ function $$eval$2(instrs) {
           RE_EXN_ID: "Assert_failure",
           _1: [
             "Lab.res",
-            189,
+            233,
             13
           ],
           Error: new Error()
@@ -286,40 +390,217 @@ function $$eval$2(instrs) {
   };
 }
 
-function tostring$2(instrs) {
+function tostring$3(instrs) {
   if (!instrs) {
     return "";
   }
   var i = instrs.hd;
   if (typeof i !== "number") {
     if (i.TAG === /* Cst */0) {
-      return "Cst(" + i._0 + ");" + tostring$2(instrs.tl);
+      return "Cst(" + i._0 + ");" + tostring$3(instrs.tl);
     } else {
-      return "Var(" + i._0 + ");" + tostring$2(instrs.tl);
+      return "Var(" + i._0 + ");" + tostring$3(instrs.tl);
     }
   }
   switch (i) {
     case /* Add */0 :
-        return "Add;" + tostring$2(instrs.tl);
+        return "Add;" + tostring$3(instrs.tl);
     case /* Mul */1 :
-        return "Mul;" + tostring$2(instrs.tl);
+        return "Mul;" + tostring$3(instrs.tl);
     case /* Pop */2 :
-        return "Pop;" + tostring$2(instrs.tl);
+        return "Pop;" + tostring$3(instrs.tl);
     case /* Swap */3 :
-        return "Swap;" + tostring$2(instrs.tl);
+        return "Swap;" + tostring$3(instrs.tl);
     
   }
 }
 
-var Instr1 = {
+var Instrs1 = {
   get: get,
-  pop: pop,
-  $$eval: $$eval$2,
-  tostring: tostring$2
+  pop: pop$1,
+  $$eval: $$eval$3,
+  tostring: tostring$3
 };
 
-function compileIr0(expr) {
-  var toIr1 = convert(expr);
+function convertIr0(expr) {
+  var compile = function (expr, env) {
+    switch (expr.TAG | 0) {
+      case /* Add */0 :
+          return {
+                  TAG: /* Add */0,
+                  _0: compile(expr._0, env),
+                  _1: compile(expr._1, env)
+                };
+      case /* Mul */1 :
+          return {
+                  TAG: /* Mul */1,
+                  _0: compile(expr._0, env),
+                  _1: compile(expr._1, env)
+                };
+      case /* Cst */2 :
+          return {
+                  TAG: /* Cst */2,
+                  _0: expr._0
+                };
+      case /* Var */3 :
+          return {
+                  TAG: /* Var */3,
+                  _0: index(env, expr._0, 0)
+                };
+      case /* Let */4 :
+          return {
+                  TAG: /* Let */4,
+                  _0: compile(expr._1, env),
+                  _1: compile(expr._2, {
+                        hd: expr._0,
+                        tl: env
+                      })
+                };
+      
+    }
+  };
+  return compile(expr, /* [] */0);
+}
+
+function convertInstrs0(expr) {
+  var compile = function (expr) {
+    switch (expr.TAG | 0) {
+      case /* Add */0 :
+          return Belt_List.concatMany([
+                      compile(expr._0),
+                      compile(expr._1),
+                      {
+                        hd: /* Add */0,
+                        tl: /* [] */0
+                      }
+                    ]);
+      case /* Mul */1 :
+          return Belt_List.concatMany([
+                      compile(expr._0),
+                      compile(expr._1),
+                      {
+                        hd: /* Mul */1,
+                        tl: /* [] */0
+                      }
+                    ]);
+      case /* Cst */2 :
+          return {
+                  hd: {
+                    TAG: /* Cst */0,
+                    _0: expr._0
+                  },
+                  tl: /* [] */0
+                };
+      case /* Var */3 :
+          return {
+                  hd: {
+                    TAG: /* Var */1,
+                    _0: expr._0
+                  },
+                  tl: /* [] */0
+                };
+      case /* Let */4 :
+          return Belt_List.concatMany([
+                      compile(expr._1),
+                      {
+                        hd: {
+                          TAG: /* Let */2,
+                          _0: expr._0
+                        },
+                        tl: /* [] */0
+                      },
+                      compile(expr._2),
+                      {
+                        hd: /* Swap */3,
+                        tl: {
+                          hd: /* Pop */2,
+                          tl: /* [] */0
+                        }
+                      }
+                    ]);
+      
+    }
+  };
+  return compile(expr);
+}
+
+var Interpreter = {
+  convertIr0: convertIr0,
+  convertInstrs0: convertInstrs0
+};
+
+function compile0(expr) {
+  var toInstrs0 = convertInstrs0(expr);
+  var toInstrs1 = function (_instrs, _cenv) {
+    while(true) {
+      var cenv = _cenv;
+      var instrs = _instrs;
+      if (!instrs) {
+        return /* [] */0;
+      }
+      var i = instrs.hd;
+      if (typeof i === "number") {
+        switch (i) {
+          case /* Add */0 :
+              return Belt_List.concat({
+                          hd: /* Add */0,
+                          tl: /* [] */0
+                        }, toInstrs1(instrs.tl, cenv));
+          case /* Mul */1 :
+              return Belt_List.concat({
+                          hd: /* Mul */1,
+                          tl: /* [] */0
+                        }, toInstrs1(instrs.tl, cenv));
+          case /* Pop */2 :
+              return Belt_List.concat({
+                          hd: /* Pop */2,
+                          tl: /* [] */0
+                        }, toInstrs1(instrs.tl, cenv));
+          case /* Swap */3 :
+              return Belt_List.concat({
+                          hd: /* Swap */3,
+                          tl: /* [] */0
+                        }, toInstrs1(instrs.tl, cenv));
+          
+        }
+      } else {
+        switch (i.TAG | 0) {
+          case /* Cst */0 :
+              return Belt_List.concat({
+                          hd: {
+                            TAG: /* Cst */0,
+                            _0: i._0
+                          },
+                          tl: /* [] */0
+                        }, toInstrs1(instrs.tl, cenv));
+          case /* Var */1 :
+              return Belt_List.concat({
+                          hd: {
+                            TAG: /* Var */1,
+                            _0: index(cenv, /* Local */1, 0)
+                          },
+                          tl: /* [] */0
+                        }, toInstrs1(instrs.tl, {
+                              hd: /* Temp */0,
+                              tl: cenv
+                            }));
+          case /* Let */2 :
+              _cenv = {
+                hd: /* Local */1,
+                tl: cenv
+              };
+              _instrs = instrs.tl;
+              continue ;
+          
+        }
+      }
+    };
+  };
+  return toInstrs1(toInstrs0, /* [] */0);
+}
+
+function compile1(expr) {
+  var toIr1 = convertIr0(expr);
   var toInstrs1 = function (expr, cenv) {
     switch (expr.TAG | 0) {
       case /* Add */0 :
@@ -390,7 +671,8 @@ function compileIr0(expr) {
 }
 
 var Compiler = {
-  compileIr0: compileIr0
+  compile0: compile0,
+  compile1: compile1
 };
 
 var ir0 = {
@@ -432,6 +714,41 @@ var ir1 = {
   }
 };
 
+var instrs0 = {
+  hd: {
+    TAG: /* Cst */0,
+    _0: 1
+  },
+  tl: {
+    hd: {
+      TAG: /* Let */2,
+      _0: "x"
+    },
+    tl: {
+      hd: {
+        TAG: /* Var */1,
+        _0: "x"
+      },
+      tl: {
+        hd: {
+          TAG: /* Var */1,
+          _0: "x"
+        },
+        tl: {
+          hd: /* Add */0,
+          tl: {
+            hd: /* Swap */3,
+            tl: {
+              hd: /* Pop */2,
+              tl: /* [] */0
+            }
+          }
+        }
+      }
+    }
+  }
+};
+
 var instrs1 = {
   hd: {
     TAG: /* Cst */0,
@@ -463,20 +780,27 @@ var instrs1 = {
 
 var ir1_str = tostring$1(ir1);
 
-var instrs1_str = tostring$2(instrs1);
+var instrs0_str = tostring$2(instrs0);
+
+var instrs1_str = tostring$3(instrs1);
 
 var ir0_result = $$eval(ir0);
 
 var ir1_result = $$eval$1(ir1);
 
+var instrs0_result = $$eval$2(instrs0);
+
 var Exple1 = {
   ir0: ir0,
   ir1: ir1,
+  instrs0: instrs0,
   instrs1: instrs1,
   ir1_str: ir1_str,
+  instrs0_str: instrs0_str,
   instrs1_str: instrs1_str,
   ir0_result: ir0_result,
-  ir1_result: ir1_result
+  ir1_result: ir1_result,
+  instrs0_result: instrs0_result
 };
 
 var ir0$1 = {
@@ -572,7 +896,7 @@ var instrs1$1 = {
 
 var ir1_str$1 = tostring$1(ir1$1);
 
-var instrs1_str$1 = tostring$2(instrs1$1);
+var instrs1_str$1 = tostring$3(instrs1$1);
 
 var ir0_result$1 = $$eval(ir0$1);
 
@@ -589,107 +913,185 @@ var Exple2 = {
 };
 
 function check_interpreter(param) {
-  var ir0_to_ir1 = convert(ir0);
-  if (ir1_str !== tostring$1(ir0_to_ir1)) {
+  var test_convertIr0 = function (param) {
+    var ir0_to_ir1 = convertIr0(ir0);
+    if (ir1_str !== tostring$1(ir0_to_ir1)) {
+      throw {
+            RE_EXN_ID: "Assert_failure",
+            _1: [
+              "Lab.res",
+              390,
+              6
+            ],
+            Error: new Error()
+          };
+    }
+    if (ir1_result !== $$eval$1(ir0_to_ir1)) {
+      throw {
+            RE_EXN_ID: "Assert_failure",
+            _1: [
+              "Lab.res",
+              391,
+              6
+            ],
+            Error: new Error()
+          };
+    }
+    var ir0_to_ir1$1 = convertIr0(ir0$1);
+    if (ir1_str$1 !== tostring$1(ir0_to_ir1$1)) {
+      throw {
+            RE_EXN_ID: "Assert_failure",
+            _1: [
+              "Lab.res",
+              396,
+              6
+            ],
+            Error: new Error()
+          };
+    }
+    if (ir1_result$1 !== $$eval$1(ir0_to_ir1$1)) {
+      throw {
+            RE_EXN_ID: "Assert_failure",
+            _1: [
+              "Lab.res",
+              397,
+              6
+            ],
+            Error: new Error()
+          };
+    }
+    console.log("test_convertIr0() is successful!");
+  };
+  test_convertIr0(undefined);
+  var ir0_to_instrs0 = convertInstrs0(ir0);
+  if (instrs0_str !== tostring$2(ir0_to_instrs0)) {
     throw {
           RE_EXN_ID: "Assert_failure",
           _1: [
             "Lab.res",
-            281,
+            406,
             6
           ],
           Error: new Error()
         };
   }
-  if (ir1_result !== $$eval$1(ir0_to_ir1)) {
+  if (instrs0_result !== $$eval$2(ir0_to_instrs0)) {
     throw {
           RE_EXN_ID: "Assert_failure",
           _1: [
             "Lab.res",
-            282,
+            407,
             6
           ],
           Error: new Error()
         };
   }
-  var ir0_to_ir1$1 = convert(ir0$1);
-  if (ir1_str$1 !== tostring$1(ir0_to_ir1$1)) {
-    throw {
-          RE_EXN_ID: "Assert_failure",
-          _1: [
-            "Lab.res",
-            287,
-            6
-          ],
-          Error: new Error()
-        };
-  }
-  if (ir1_result$1 !== $$eval$1(ir0_to_ir1$1)) {
-    throw {
-          RE_EXN_ID: "Assert_failure",
-          _1: [
-            "Lab.res",
-            288,
-            6
-          ],
-          Error: new Error()
-        };
-  }
-  console.log("test_interpreter0() is successful!");
+  console.log("test_convertInstrs0() is successful!");
 }
 
 function check_compiler(param) {
-  var instrs1 = compileIr0(ir0);
-  if ($$eval$2(instrs1) !== ir0_result) {
+  var test_compileIr0_Ir1 = function (param) {
+    var instrs1 = compile1(ir0);
+    if ($$eval$3(instrs1) !== ir0_result) {
+      throw {
+            RE_EXN_ID: "Assert_failure",
+            _1: [
+              "Lab.res",
+              422,
+              6
+            ],
+            Error: new Error()
+          };
+    }
+    if (tostring$3(instrs1) !== instrs1_str) {
+      throw {
+            RE_EXN_ID: "Assert_failure",
+            _1: [
+              "Lab.res",
+              423,
+              6
+            ],
+            Error: new Error()
+          };
+    }
+    var instrs1$1 = compile1(ir0$1);
+    if ($$eval$3(instrs1$1) !== ir0_result$1) {
+      throw {
+            RE_EXN_ID: "Assert_failure",
+            _1: [
+              "Lab.res",
+              428,
+              6
+            ],
+            Error: new Error()
+          };
+    }
+    if (tostring$3(instrs1$1) !== instrs1_str$1) {
+      throw {
+            RE_EXN_ID: "Assert_failure",
+            _1: [
+              "Lab.res",
+              429,
+              6
+            ],
+            Error: new Error()
+          };
+    }
+    console.log("test_compileIr0_Ir1() is successful!");
+  };
+  test_compileIr0_Ir1(undefined);
+  var instrs1 = compile0(ir0);
+  if ($$eval$3(instrs1) !== instrs0_result) {
     throw {
           RE_EXN_ID: "Assert_failure",
           _1: [
             "Lab.res",
-            301,
+            439,
             6
           ],
           Error: new Error()
         };
   }
-  if (tostring$2(instrs1) !== instrs1_str) {
+  if (tostring$3(instrs1) !== instrs1_str) {
     throw {
           RE_EXN_ID: "Assert_failure",
           _1: [
             "Lab.res",
-            302,
+            440,
             6
           ],
           Error: new Error()
         };
   }
-  var instrs1$1 = compileIr0(ir0$1);
-  if ($$eval$2(instrs1$1) !== ir0_result$1) {
+  var instrs1$1 = compile0(ir0$1);
+  if ($$eval$3(instrs1$1) !== ir0_result$1) {
     throw {
           RE_EXN_ID: "Assert_failure",
           _1: [
             "Lab.res",
-            307,
+            445,
             6
           ],
           Error: new Error()
         };
   }
-  if (tostring$2(instrs1$1) !== instrs1_str$1) {
+  if (tostring$3(instrs1$1) !== instrs1_str$1) {
     throw {
           RE_EXN_ID: "Assert_failure",
           _1: [
             "Lab.res",
-            308,
+            446,
             6
           ],
           Error: new Error()
         };
   }
-  console.log("test_compileIr0() is successful!");
+  console.log("test_compileIr0_Instrs0() is successful!");
 }
 
 function test(param) {
   check_interpreter(undefined);
+  console.log("");
   check_compiler(undefined);
 }
 
@@ -701,16 +1103,15 @@ var Test = {
   test: test
 };
 
-check_interpreter(undefined);
-
-check_compiler(undefined);
+test(undefined);
 
 export {
   Ir0 ,
   Ir1 ,
   index ,
-  Interpreter0 ,
-  Instr1 ,
+  Instrs0 ,
+  Instrs1 ,
+  Interpreter ,
   Compiler ,
   Test ,
 }

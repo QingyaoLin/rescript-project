@@ -11,38 +11,51 @@ module Ir1: {
   let tostring: expr => string
 }
 let index: (list<'a>, 'a, int) => int
-module Interpreter0: {
-  type cenv = list<string>
-  let convert: Ir0.expr => Ir1.expr
-}
-module Instr1: {
-  type instr = Add | Mul | Cst(int) | Var(int) | Pop | Swap
+module Instrs0: {
+  type instr = Add | Mul | Cst(int) | Var(string) | Let(string) | Pop | Swap
   type instrs = list<instr>
-  type operand = int
-  type stack = list<operand>
-  let get: (int, stack) => operand
-  let pop: stack => Belt.List.t<operand>
+  type stack = list<int>
+  type senv = list<(string, int)>
+  let pop: stack => Belt.List.t<int>
   let eval: instrs => int
   let tostring: list<instr> => string
 }
+module Instrs1: {
+  type instr = Add | Mul | Cst(int) | Var(int) | Pop | Swap
+  type instrs = list<instr>
+  type stack = list<int>
+  let get: (int, stack) => int
+  let pop: stack => Belt.List.t<int>
+  let eval: instrs => int
+  let tostring: list<instr> => string
+}
+module Interpreter: {
+  type cenv = list<string>
+  let convertIr0: Ir0.expr => Ir1.expr
+  let convertInstrs0: Ir0.expr => Instrs0.instrs
+}
 module Compiler: {
   type varType = Temp | Local
-  let compileIr0: Ir0.expr => Instr1.instrs
+  let compile0: Ir0.expr => Instrs1.instrs
+  let compile1: Ir0.expr => Instrs1.instrs
 }
 module Test: {
   module Exple1: {
     let ir0: Ir0.expr
     let ir1: Ir1.expr
-    let instrs1: list<Instr1.instr>
+    let instrs0: list<Instrs0.instr>
+    let instrs1: list<Instrs1.instr>
     let ir1_str: string
+    let instrs0_str: string
     let instrs1_str: string
     let ir0_result: int
     let ir1_result: int
+    let instrs0_result: int
   }
   module Exple2: {
     let ir0: Ir0.expr
     let ir1: Ir1.expr
-    let instrs1: list<Instr1.instr>
+    let instrs1: list<Instrs1.instr>
     let ir1_str: string
     let instrs1_str: string
     let ir0_result: int
