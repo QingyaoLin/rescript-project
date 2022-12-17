@@ -171,7 +171,7 @@ module Instrs0 = {
       | (list{Pop, ...rest}, _) => interpret(rest, pop(stack), senv)
       | (list{Swap, ...rest}, list{operand1, operand2, ...stack}) =>
         interpret(rest, list{operand2, operand1, ...stack}, senv)
-      | (list{}, list{result, ..._}) => result
+      | (list{}, list{result}) => result
       | _ => assert false
       }
     }
@@ -229,7 +229,7 @@ module Instrs1 = {
       | (list{Pop, ...rest}, _) => interpret(rest, pop(stack))
       | (list{Swap, ...rest}, list{operand1, operand2, ...stack}) =>
         interpret(rest, list{operand2, operand1, ...stack})
-      | (list{}, list{result, ..._}) => result
+      | (list{}, list{result}) => result
       | _ => assert false
       }
     }
@@ -285,42 +285,43 @@ module Interpreter = {
   }
 }
 
-module Compiler = {
-  // 是临时，还是本地变量
-  type varType = Temp | Local
+// Ir0 => Instr0 => Instr1
+module Compile0 = {
+  // 是临时，还是本地变量,且变量名为
+  type varType = Temp | Local(string)
 
-  // Ir0 => Instr0 => Instr1
-  let compile0 = (expr: Ir0.expr) => {
+  let compile = (expr: Ir0.expr) => {
     let toInstrs0 = Interpreter.convertInstrs0(expr)
 
     let rec toInstrs1 = (instrs, cenv: list<varType>): Instrs1.instrs => {
       switch instrs {
-      | list{Instrs0.Cst(i), ...rest} =>
-        Belt.List.concat(list{Instrs1.Cst(i)}, toInstrs1(rest, cenv))
-      | list{Add, ...rest} => Belt.List.concat(list{Instrs1.Add}, toInstrs1(rest, cenv))
-      | list{Mul, ...rest} => Belt.List.concat(list{Instrs1.Mul}, toInstrs1(rest, cenv))
-      | list{Var(_), ...rest} =>
-        Belt.List.concat(
-          list{Instrs1.Var(index(cenv, Local, 0))},
-          toInstrs1(rest, list{Temp, ...cenv}),
-        )
-      | list{Let(_), ...rest} => toInstrs1(rest, list{Local, ...cenv})
-      | list{Swap, ...rest} => Belt.List.concat(list{Instrs1.Swap}, toInstrs1(rest, cenv))
-      | list{Pop, ...rest} => Belt.List.concat(list{Instrs1.Pop}, toInstrs1(rest, cenv))
+      | list{Instrs0.Cst(i), ...rest} => list{Instrs1.Cst(i), ...toInstrs1(rest, cenv)}
+      | list{Add, ...rest} => list{Instrs1.Add, ...toInstrs1(rest, cenv)}
+      | list{Mul, ...rest} => list{Instrs1.Mul, ...toInstrs1(rest, cenv)}
+      | list{Var(variable), ...rest} =>
+        list{Var(index(cenv, Local(variable), 0)), ...toInstrs1(rest, list{Temp, ...cenv})}
+      | list{Let(variable), ...rest} => toInstrs1(rest, list{Local(variable), ...cenv})
+      | list{Swap, ...rest} => list{Instrs1.Swap, ...toInstrs1(rest, cenv)}
+      | list{Pop, ...rest} => list{Instrs1.Pop, ...toInstrs1(rest, cenv)}
       | _ => list{}
       }
     }
 
     toInstrs1(toInstrs0, list{})
   }
+}
 
-  // Ir0 => Ir1 => Instr1
-  // Let("x", Cst(1), Add(Var("x"),Var("x")))
-  // =>
-  // Let(Cst(1), Add(Var(0),Var(0)))
-  // =>
-  // [Cst(1);Var(0);Var(1);Add;Swap;Pop]
-  let compile1 = (expr: Ir0.expr) => {
+// Ir0 => Ir1 => Instr1
+// Let("x", Cst(1), Add(Var("x"),Var("x")))
+// =>
+// Let(Cst(1), Add(Var(0),Var(0)))
+// =>
+// [Cst(1);Var(0);Var(1);Add;Swap;Pop]
+module Compile1 = {
+  // 是临时，还是本地变量,且变量名为
+  type varType = Temp | Local
+
+  let compile = (expr: Ir0.expr) => {
     let toIr1 = Interpreter.convertIr0(expr)
 
     let rec toInstrs1 = (expr, cenv: list<varType>): Instrs1.instrs => {
@@ -414,42 +415,42 @@ module Test = {
   }
 
   let check_compiler = () => {
-    // Ir0 => Ir1 => Instrs1
-    let test_compileIr0_Ir1 = () => {
-      // test Exple1
-      let instrs1 = Compiler.compile1(Exple1.ir0)
-
-      assert (Instrs1.eval(instrs1) == Exple1.ir0_result)
-      assert (Instrs1.tostring(instrs1) == Exple1.instrs1_str)
-
-      // test Exple2
-      let instrs1 = Compiler.compile1(Exple2.ir0)
-
-      assert (Instrs1.eval(instrs1) == Exple2.ir0_result)
-      assert (Instrs1.tostring(instrs1) == Exple2.instrs1_str)
-
-      Js.log("test_compileIr0_Ir1() is successful!")
-    }
-
     // Ir0 => Instrs0 => Instrs1
-    let test_compileIr0_Instrs0 = () => {
+    let test_compile0 = () => {
       // test Exple1
-      let instrs1 = Compiler.compile0(Exple1.ir0)
+      let instrs1 = Compile0.compile(Exple1.ir0)
 
       assert (Instrs1.eval(instrs1) == Exple1.instrs0_result)
       assert (Instrs1.tostring(instrs1) == Exple1.instrs1_str)
 
       // test Exple2
-      let instrs1 = Compiler.compile0(Exple2.ir0)
+      let instrs1 = Compile0.compile(Exple2.ir0)
 
       assert (Instrs1.eval(instrs1) == Exple2.ir0_result)
       assert (Instrs1.tostring(instrs1) == Exple2.instrs1_str)
 
-      Js.log("test_compileIr0_Instrs0() is successful!")
+      Js.log("test_compile0() is successful!")
     }
 
-    test_compileIr0_Ir1()
-    test_compileIr0_Instrs0()
+    // Ir0 => Ir1 => Instrs1
+    let test_compile1 = () => {
+      // test Exple1
+      let instrs1 = Compile1.compile(Exple1.ir0)
+
+      assert (Instrs1.eval(instrs1) == Exple1.ir0_result)
+      assert (Instrs1.tostring(instrs1) == Exple1.instrs1_str)
+
+      // test Exple2
+      let instrs1 = Compile1.compile(Exple2.ir0)
+
+      assert (Instrs1.eval(instrs1) == Exple2.ir0_result)
+      assert (Instrs1.tostring(instrs1) == Exple2.instrs1_str)
+
+      Js.log("test_compile1() is successful!")
+    }
+
+    test_compile0()
+    test_compile1()
   }
 
   let test = () => {

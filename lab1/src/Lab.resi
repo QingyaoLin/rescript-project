@@ -34,10 +34,13 @@ module Interpreter: {
   let convertIr0: Ir0.expr => Ir1.expr
   let convertInstrs0: Ir0.expr => Instrs0.instrs
 }
-module Compiler: {
+module Compile0: {
+  type varType = Temp | Local(string)
+  let compile: Ir0.expr => Instrs1.instrs
+}
+module Compile1: {
   type varType = Temp | Local
-  let compile0: Ir0.expr => Instrs1.instrs
-  let compile1: Ir0.expr => Instrs1.instrs
+  let compile: Ir0.expr => Instrs1.instrs
 }
 module Test: {
   module Exple1: {
