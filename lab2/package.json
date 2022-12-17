@@ -1,8 +1,8 @@
 {
-  "name": "lab0",
-  "version": "0.1.0",
-  "type": "module",
+  "name": "lab2",
+  "version": "1.0.0",
   "description": "``` npm run build ```",
+  "type": "module",
   "main": "index.js",
   "devDependencies": {},
   "scripts": {

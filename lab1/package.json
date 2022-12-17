@@ -1,7 +1,9 @@
 {
   "name": "lab1",
   "version": "0.1.0",
+  "description": "``` npm run build ```",
   "type": "module",
+  "main": "index.js",
   "scripts": {
     "clean": "rescript clean",
     "build": "rescript build",
@@ -11,11 +13,18 @@
   "keywords": [
     "ReScript"
   ],
-  "author": "",
+  "author": "Qingyao Lin",
   "license": "MIT",
-  "description": "``` npm run build ```",
-  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/linqingyao/rescript-project.git"
+  },
+  "bugs": {
+    "url": "https://github.com/linqingyao/rescript-project/issues"
+  },
+  "homepage": "https://github.com/linqingyao/rescript-project#readme",
   "directories": {
     "lib": "lib"
-  }
+  },
+  "devDependencies": {}
 }

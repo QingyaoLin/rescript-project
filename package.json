@@ -5,17 +5,28 @@
   "scripts": {
     "help": "echo \"please use `npm run -w <workspace-name>` according to related commands\""
   },
-  "author": "",
+  "author": "Qingyao Lin",
   "license": "MIT",
   "workspaces": [
     "lab0",
-    "lab1"
+    "lab1",
+    "lab2"
   ],
   "dependencies": {
     "lab0": "^0.1.0",
-    "lab1": "^0.1.0"
+    "lab1": "^0.1.0",
+    "lab2": "^0.1.0"
   },
   "devDependencies": {
     "rescript": "^10.0.1"
-  }
+  },
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/linqingyao/rescript-project.git"
+  },
+  "bugs": {
+    "url": "https://github.com/linqingyao/rescript-project/issues"
+  },
+  "homepage": "https://github.com/linqingyao/rescript-project#readme"
 }
