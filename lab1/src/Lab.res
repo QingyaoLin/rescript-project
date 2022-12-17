@@ -295,14 +295,14 @@ module Compile0 = {
 
     let rec toInstrs1 = (instrs, cenv: list<varType>): Instrs1.instrs => {
       switch instrs {
-      | list{Instrs0.Cst(i), ...rest} => list{Instrs1.Cst(i), ...toInstrs1(rest, cenv)}
-      | list{Add, ...rest} => list{Instrs1.Add, ...toInstrs1(rest, cenv)}
-      | list{Mul, ...rest} => list{Instrs1.Mul, ...toInstrs1(rest, cenv)}
+      | list{Instrs0.Cst(i), ...rest} => list{Cst(i), ...toInstrs1(rest, cenv)}
+      | list{Add, ...rest} => list{Add, ...toInstrs1(rest, cenv)}
+      | list{Mul, ...rest} => list{Mul, ...toInstrs1(rest, cenv)}
       | list{Var(variable), ...rest} =>
         list{Var(index(cenv, Local(variable), 0)), ...toInstrs1(rest, list{Temp, ...cenv})}
       | list{Let(variable), ...rest} => toInstrs1(rest, list{Local(variable), ...cenv})
-      | list{Swap, ...rest} => list{Instrs1.Swap, ...toInstrs1(rest, cenv)}
-      | list{Pop, ...rest} => list{Instrs1.Pop, ...toInstrs1(rest, cenv)}
+      | list{Swap, ...rest} => list{Swap, ...toInstrs1(rest, cenv)}
+      | list{Pop, ...rest} => list{Pop, ...toInstrs1(rest, cenv)}
       | _ => list{}
       }
     }
@@ -318,7 +318,7 @@ module Compile0 = {
 // =>
 // [Cst(1);Var(0);Var(1);Add;Swap;Pop]
 module Compile1 = {
-  // 是临时，还是本地变量,且变量名为
+  // 是临时，还是本地变量
   type varType = Temp | Local
 
   let compile = (expr: Ir0.expr) => {
