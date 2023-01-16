@@ -5,7 +5,10 @@
 // 1. 过度捕获环境，思考:
 //   - `let z = 2 in let y = 1 in fun(x) -> x + y`
 //   - `let z = 2 in fun(x,y) -> x + y`
-//   - #TODO 思考如何避免过度捕获环境
+//   - #TODO 思考如何避免过度捕获环境   √
+
+// 忽略部分匹配的 Warning
+@@warning("-8")
 
 module Ir0 = {
   type rec expr =
@@ -39,6 +42,37 @@ module Ir0 = {
     }
   }
 
+  // 获取闭包捕获的环境
+  let rec capture = (closure_env: list<string>, parent_env: env, body) => {
+    switch body {
+    | Var(variable) =>
+      if closure_env->Belt.List.has(variable, (k, item) => k == item) {
+        list{}
+      } else if parent_env->Belt.List.hasAssoc(variable, (k, item) => k == item) {
+        list{(variable, List.assoc(variable, parent_env))}
+      } else {
+        assert false
+      }
+    | Add(expr1, expr2) | Mul(expr1, expr2) =>
+      Belt.List.concat(
+        capture(closure_env, parent_env, expr2),
+        capture(closure_env, parent_env, expr1),
+      )
+    | Fn(pars, body) => {
+        let closure_env = Belt.List.concat(pars, closure_env)
+        capture(closure_env, parent_env, body)
+      }
+
+    | Let(variable, expr1, expr2) =>
+      Belt.List.concat(
+        capture(list{variable, ...closure_env}, parent_env, expr2),
+        capture(closure_env, parent_env, expr1),
+      )
+    // 其他情况，比如 Cst()、Call 不需要进行分析
+    | _ => list{}
+    }
+  }
+
   let interpret = expr => {
     let rec eval = (expr, env): value => {
       switch expr {
@@ -46,7 +80,11 @@ module Ir0 = {
       | Var(variable) => List.assoc(variable, env)
       | Add(expr1, expr2) => vadd(eval(expr1, env), eval(expr2, env))
       | Mul(expr1, expr2) => vmul(eval(expr1, env), eval(expr2, env))
-      | Fn(pars, body) => Vclosure(env, pars, body)
+      | Fn(pars, body) => {
+          let capture_env = capture(pars, env, body)
+          Vclosure(capture_env, pars, body)
+        }
+
       | Call(name, args) => {
           let Vclosure(env_closure, pars_closure, body) = eval(name, env)
           let args_value = Belt.List.map(args, arg => eval(arg, env))
@@ -81,7 +119,7 @@ module Ir1 = {
     | Var(int)
     | Add(expr, expr)
     | Mul(expr, expr)
-    | Fn(expr) //no need to store the arity, precompute the index of parameters
+    | Fn(expr) // no need to store the arity, precompute the index of parameters
     | Call(expr, list<expr>) // we need semantics checking!
     | Let(expr, expr)
 

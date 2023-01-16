@@ -16,7 +16,7 @@ function vadd(v1, v2) {
           RE_EXN_ID: "Assert_failure",
           _1: [
             "Lab.res",
-            31,
+            34,
             11
           ],
           Error: new Error()
@@ -26,7 +26,7 @@ function vadd(v1, v2) {
         RE_EXN_ID: "Assert_failure",
         _1: [
           "Lab.res",
-          31,
+          34,
           11
         ],
         Error: new Error()
@@ -45,7 +45,7 @@ function vmul(v1, v2) {
           RE_EXN_ID: "Assert_failure",
           _1: [
             "Lab.res",
-            38,
+            41,
             11
           ],
           Error: new Error()
@@ -55,11 +55,65 @@ function vmul(v1, v2) {
         RE_EXN_ID: "Assert_failure",
         _1: [
           "Lab.res",
-          38,
+          41,
           11
         ],
         Error: new Error()
       };
+}
+
+function capture(_closure_env, parent_env, _body) {
+  while(true) {
+    var body = _body;
+    var closure_env = _closure_env;
+    switch (body.TAG | 0) {
+      case /* Var */1 :
+          var variable = body._0;
+          if (Belt_List.has(closure_env, variable, (function (k, item) {
+                    return k === item;
+                  }))) {
+            return /* [] */0;
+          }
+          if (Belt_List.hasAssoc(parent_env, variable, (function (k, item) {
+                    return k === item;
+                  }))) {
+            return {
+                    hd: [
+                      variable,
+                      List.assoc(variable, parent_env)
+                    ],
+                    tl: /* [] */0
+                  };
+          }
+          throw {
+                RE_EXN_ID: "Assert_failure",
+                _1: [
+                  "Lab.res",
+                  54,
+                  8
+                ],
+                Error: new Error()
+              };
+      case /* Add */2 :
+      case /* Mul */3 :
+          break;
+      case /* Fn */4 :
+          var closure_env$1 = Belt_List.concat(body._0, closure_env);
+          _body = body._1;
+          _closure_env = closure_env$1;
+          continue ;
+      case /* Cst */0 :
+      case /* Call */5 :
+          return /* [] */0;
+      case /* Let */6 :
+          return Belt_List.concat(capture({
+                          hd: body._0,
+                          tl: closure_env
+                        }, parent_env, body._2), capture(closure_env, parent_env, body._1));
+      
+    }
+    return Belt_List.concat(capture(closure_env, parent_env, body._1), capture(closure_env, parent_env, body._0));
+  };
 }
 
 function interpret(expr) {
@@ -80,11 +134,14 @@ function interpret(expr) {
         case /* Mul */3 :
             return vmul($$eval(expr._0, env), $$eval(expr._1, env));
         case /* Fn */4 :
+            var body = expr._1;
+            var pars = expr._0;
+            var capture_env = capture(pars, env, body);
             return {
                     TAG: /* Vclosure */1,
-                    _0: env,
-                    _1: expr._0,
-                    _2: expr._1
+                    _0: capture_env,
+                    _1: pars,
+                    _2: body
                   };
         case /* Call */5 :
             var match = $$eval(expr._0, env);
@@ -93,7 +150,7 @@ function interpret(expr) {
                     RE_EXN_ID: "Match_failure",
                     _1: [
                       "Lab.res",
-                      51,
+                      89,
                       14
                     ],
                     Error: new Error()
@@ -130,7 +187,7 @@ function interpret(expr) {
         RE_EXN_ID: "Assert_failure",
         _1: [
           "Lab.res",
-          65,
+          103,
           13
         ],
         Error: new Error()
@@ -140,6 +197,7 @@ function interpret(expr) {
 var Ir0 = {
   vadd: vadd,
   vmul: vmul,
+  capture: capture,
   interpret: interpret
 };
 
@@ -155,7 +213,7 @@ function vadd$1(v1, v2) {
           RE_EXN_ID: "Assert_failure",
           _1: [
             "Lab.res",
-            96,
+            134,
             11
           ],
           Error: new Error()
@@ -165,7 +223,7 @@ function vadd$1(v1, v2) {
         RE_EXN_ID: "Assert_failure",
         _1: [
           "Lab.res",
-          96,
+          134,
           11
         ],
         Error: new Error()
@@ -184,7 +242,7 @@ function vmul$1(v1, v2) {
           RE_EXN_ID: "Assert_failure",
           _1: [
             "Lab.res",
-            103,
+            141,
             11
           ],
           Error: new Error()
@@ -194,7 +252,7 @@ function vmul$1(v1, v2) {
         RE_EXN_ID: "Assert_failure",
         _1: [
           "Lab.res",
-          103,
+          141,
           11
         ],
         Error: new Error()
@@ -231,7 +289,7 @@ function interpret$1(expr) {
                     RE_EXN_ID: "Match_failure",
                     _1: [
                       "Lab.res",
-                      116,
+                      154,
                       14
                     ],
                     Error: new Error()
@@ -265,7 +323,7 @@ function interpret$1(expr) {
         RE_EXN_ID: "Assert_failure",
         _1: [
           "Lab.res",
-          129,
+          167,
           13
         ],
         Error: new Error()
@@ -290,7 +348,7 @@ function index(l, s) {
         RE_EXN_ID: "Assert_failure",
         _1: [
           "Lab.res",
-          148,
+          186,
           11
         ],
         Error: new Error()
@@ -422,7 +480,7 @@ if (!Caml_obj.equal(convert(exprIr0), exprIr1)) {
         RE_EXN_ID: "Assert_failure",
         _1: [
           "Lab.res",
-          179,
+          217,
           0
         ],
         Error: new Error()
