@@ -42,8 +42,8 @@ module Ir0 = {
     }
   }
 
-  // 获取闭包捕获的环境
-  let rec capture = (closure_env: list<string>, parent_env: env, body) => {
+  // Analysis of the capture environment
+  let rec capture_analysis = (closure_env: list<string>, parent_env: env, body) => {
     switch body {
     | Var(variable) =>
       if closure_env->Belt.List.has(variable, (k, item) => k == item) {
@@ -55,20 +55,20 @@ module Ir0 = {
       }
     | Add(expr1, expr2) | Mul(expr1, expr2) =>
       Belt.List.concat(
-        capture(closure_env, parent_env, expr2),
-        capture(closure_env, parent_env, expr1),
+        capture_analysis(closure_env, parent_env, expr2),
+        capture_analysis(closure_env, parent_env, expr1),
       )
     | Fn(pars, body) => {
         let closure_env = Belt.List.concat(pars, closure_env)
-        capture(closure_env, parent_env, body)
+        capture_analysis(closure_env, parent_env, body)
       }
 
     | Let(variable, expr1, expr2) =>
       Belt.List.concat(
-        capture(list{variable, ...closure_env}, parent_env, expr2),
-        capture(closure_env, parent_env, expr1),
+        capture_analysis(list{variable, ...closure_env}, parent_env, expr2),
+        capture_analysis(closure_env, parent_env, expr1),
       )
-    // 其他情况，比如 Cst()、Call 不需要进行分析
+    // Other conditions do not need to analysis
     | _ => list{}
     }
   }
@@ -82,7 +82,7 @@ module Ir0 = {
       | Mul(expr1, expr2) => vmul(eval(expr1, env), eval(expr2, env))
       | Fn(pars, body) => {
           Js.log(env)
-          let capture_env = capture(pars, env, body)
+          let capture_env = capture_analysis(pars, env, body)
 
           Js.log(capture_env)
           Vclosure(capture_env, pars, body)

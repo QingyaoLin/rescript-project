@@ -62,7 +62,7 @@ function vmul(v1, v2) {
       };
 }
 
-function capture(_closure_env, parent_env, _body) {
+function capture_analysis(_closure_env, parent_env, _body) {
   while(true) {
     var body = _body;
     var closure_env = _closure_env;
@@ -106,13 +106,13 @@ function capture(_closure_env, parent_env, _body) {
       case /* Call */5 :
           return /* [] */0;
       case /* Let */6 :
-          return Belt_List.concat(capture({
+          return Belt_List.concat(capture_analysis({
                           hd: body._0,
                           tl: closure_env
-                        }, parent_env, body._2), capture(closure_env, parent_env, body._1));
+                        }, parent_env, body._2), capture_analysis(closure_env, parent_env, body._1));
       
     }
-    return Belt_List.concat(capture(closure_env, parent_env, body._1), capture(closure_env, parent_env, body._0));
+    return Belt_List.concat(capture_analysis(closure_env, parent_env, body._1), capture_analysis(closure_env, parent_env, body._0));
   };
 }
 
@@ -137,7 +137,7 @@ function interpret(expr) {
             var body = expr._1;
             var pars = expr._0;
             console.log(env);
-            var capture_env = capture(pars, env, body);
+            var capture_env = capture_analysis(pars, env, body);
             console.log(capture_env);
             return {
                     TAG: /* Vclosure */1,
@@ -199,7 +199,7 @@ function interpret(expr) {
 var Ir0 = {
   vadd: vadd,
   vmul: vmul,
-  capture: capture,
+  capture_analysis: capture_analysis,
   interpret: interpret
 };
 
