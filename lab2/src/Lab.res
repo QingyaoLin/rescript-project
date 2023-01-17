@@ -6,6 +6,8 @@
 //   - `let z = 2 in let y = 1 in fun(x) -> x + y`
 //   - `let z = 2 in fun(x,y) -> x + y`
 //   - #TODO 思考如何避免过度捕获环境   √
+// 2. 在 Ir1.Call(expr, list<expr>) 中需要 semantics checking
+//   - #TODO 怎么进行 semantics checking  ×
 
 // 忽略部分匹配的 Warning
 @@warning("-8")

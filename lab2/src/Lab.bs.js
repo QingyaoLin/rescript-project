@@ -16,7 +16,7 @@ function vadd(v1, v2) {
           RE_EXN_ID: "Assert_failure",
           _1: [
             "Lab.res",
-            34,
+            36,
             11
           ],
           Error: new Error()
@@ -26,7 +26,7 @@ function vadd(v1, v2) {
         RE_EXN_ID: "Assert_failure",
         _1: [
           "Lab.res",
-          34,
+          36,
           11
         ],
         Error: new Error()
@@ -45,7 +45,7 @@ function vmul(v1, v2) {
           RE_EXN_ID: "Assert_failure",
           _1: [
             "Lab.res",
-            41,
+            43,
             11
           ],
           Error: new Error()
@@ -55,7 +55,7 @@ function vmul(v1, v2) {
         RE_EXN_ID: "Assert_failure",
         _1: [
           "Lab.res",
-          41,
+          43,
           11
         ],
         Error: new Error()
@@ -89,7 +89,7 @@ function capture_analysis(_closure_env, parent_env, _body) {
                 RE_EXN_ID: "Assert_failure",
                 _1: [
                   "Lab.res",
-                  54,
+                  56,
                   8
                 ],
                 Error: new Error()
@@ -152,7 +152,7 @@ function interpret(expr) {
                     RE_EXN_ID: "Match_failure",
                     _1: [
                       "Lab.res",
-                      92,
+                      94,
                       14
                     ],
                     Error: new Error()
@@ -189,7 +189,7 @@ function interpret(expr) {
         RE_EXN_ID: "Assert_failure",
         _1: [
           "Lab.res",
-          106,
+          108,
           13
         ],
         Error: new Error()
@@ -215,7 +215,7 @@ function vadd$1(v1, v2) {
           RE_EXN_ID: "Assert_failure",
           _1: [
             "Lab.res",
-            137,
+            139,
             11
           ],
           Error: new Error()
@@ -225,7 +225,7 @@ function vadd$1(v1, v2) {
         RE_EXN_ID: "Assert_failure",
         _1: [
           "Lab.res",
-          137,
+          139,
           11
         ],
         Error: new Error()
@@ -244,7 +244,7 @@ function vmul$1(v1, v2) {
           RE_EXN_ID: "Assert_failure",
           _1: [
             "Lab.res",
-            144,
+            146,
             11
           ],
           Error: new Error()
@@ -254,7 +254,7 @@ function vmul$1(v1, v2) {
         RE_EXN_ID: "Assert_failure",
         _1: [
           "Lab.res",
-          144,
+          146,
           11
         ],
         Error: new Error()
@@ -291,7 +291,7 @@ function interpret$1(expr) {
                     RE_EXN_ID: "Match_failure",
                     _1: [
                       "Lab.res",
-                      157,
+                      159,
                       14
                     ],
                     Error: new Error()
@@ -325,7 +325,7 @@ function interpret$1(expr) {
         RE_EXN_ID: "Assert_failure",
         _1: [
           "Lab.res",
-          170,
+          172,
           13
         ],
         Error: new Error()
@@ -350,7 +350,7 @@ function index(l, s) {
         RE_EXN_ID: "Assert_failure",
         _1: [
           "Lab.res",
-          189,
+          191,
           11
         ],
         Error: new Error()
@@ -479,7 +479,7 @@ function test1(param) {
         RE_EXN_ID: "Assert_failure",
         _1: [
           "Lab.res",
-          222,
+          224,
           4
         ],
         Error: new Error()
@@ -580,7 +580,7 @@ function test2(param) {
         RE_EXN_ID: "Assert_failure",
         _1: [
           "Lab.res",
-          241,
+          243,
           4
         ],
         Error: new Error()
