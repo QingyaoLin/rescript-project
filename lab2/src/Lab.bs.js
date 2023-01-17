@@ -136,7 +136,9 @@ function interpret(expr) {
         case /* Fn */4 :
             var body = expr._1;
             var pars = expr._0;
+            console.log(env);
             var capture_env = capture(pars, env, body);
+            console.log(capture_env);
             return {
                     TAG: /* Vclosure */1,
                     _0: capture_env,
@@ -150,7 +152,7 @@ function interpret(expr) {
                     RE_EXN_ID: "Match_failure",
                     _1: [
                       "Lab.res",
-                      89,
+                      92,
                       14
                     ],
                     Error: new Error()
@@ -187,7 +189,7 @@ function interpret(expr) {
         RE_EXN_ID: "Assert_failure",
         _1: [
           "Lab.res",
-          103,
+          106,
           13
         ],
         Error: new Error()
@@ -213,7 +215,7 @@ function vadd$1(v1, v2) {
           RE_EXN_ID: "Assert_failure",
           _1: [
             "Lab.res",
-            134,
+            137,
             11
           ],
           Error: new Error()
@@ -223,7 +225,7 @@ function vadd$1(v1, v2) {
         RE_EXN_ID: "Assert_failure",
         _1: [
           "Lab.res",
-          134,
+          137,
           11
         ],
         Error: new Error()
@@ -242,7 +244,7 @@ function vmul$1(v1, v2) {
           RE_EXN_ID: "Assert_failure",
           _1: [
             "Lab.res",
-            141,
+            144,
             11
           ],
           Error: new Error()
@@ -252,7 +254,7 @@ function vmul$1(v1, v2) {
         RE_EXN_ID: "Assert_failure",
         _1: [
           "Lab.res",
-          141,
+          144,
           11
         ],
         Error: new Error()
@@ -289,7 +291,7 @@ function interpret$1(expr) {
                     RE_EXN_ID: "Match_failure",
                     _1: [
                       "Lab.res",
-                      154,
+                      157,
                       14
                     ],
                     Error: new Error()
@@ -323,7 +325,7 @@ function interpret$1(expr) {
         RE_EXN_ID: "Assert_failure",
         _1: [
           "Lab.res",
-          167,
+          170,
           13
         ],
         Error: new Error()
@@ -348,7 +350,7 @@ function index(l, s) {
         RE_EXN_ID: "Assert_failure",
         _1: [
           "Lab.res",
-          186,
+          189,
           11
         ],
         Error: new Error()
@@ -413,86 +415,191 @@ var Compiler = {
   convert: convert
 };
 
-var exprIr0 = {
-  TAG: /* Call */5,
-  _0: {
-    TAG: /* Fn */4,
+function test1(param) {
+  var exprIr0 = {
+    TAG: /* Call */5,
     _0: {
-      hd: "x",
-      tl: /* [] */0
+      TAG: /* Fn */4,
+      _0: {
+        hd: "x",
+        tl: /* [] */0
+      },
+      _1: {
+        TAG: /* Add */2,
+        _0: {
+          TAG: /* Var */1,
+          _0: "x"
+        },
+        _1: {
+          TAG: /* Var */1,
+          _0: "x"
+        }
+      }
     },
     _1: {
-      TAG: /* Add */2,
-      _0: {
-        TAG: /* Var */1,
-        _0: "x"
+      hd: {
+        TAG: /* Cst */0,
+        _0: 1
       },
-      _1: {
-        TAG: /* Var */1,
-        _0: "x"
-      }
+      tl: /* [] */0
     }
-  },
-  _1: {
-    hd: {
-      TAG: /* Cst */0,
-      _0: 1
-    },
-    tl: /* [] */0
-  }
-};
-
-var result = interpret(exprIr0);
-
-console.log(result);
-
-var exprIr1 = {
-  TAG: /* Call */5,
-  _0: {
-    TAG: /* Fn */4,
+  };
+  var result = interpret(exprIr0);
+  console.log(result);
+  var exprIr1 = {
+    TAG: /* Call */5,
     _0: {
-      TAG: /* Add */2,
+      TAG: /* Fn */4,
       _0: {
-        TAG: /* Var */1,
-        _0: 0
-      },
-      _1: {
-        TAG: /* Var */1,
-        _0: 0
+        TAG: /* Add */2,
+        _0: {
+          TAG: /* Var */1,
+          _0: 0
+        },
+        _1: {
+          TAG: /* Var */1,
+          _0: 0
+        }
       }
-    }
-  },
-  _1: {
-    hd: {
-      TAG: /* Cst */0,
-      _0: 1
     },
-    tl: /* [] */0
+    _1: {
+      hd: {
+        TAG: /* Cst */0,
+        _0: 1
+      },
+      tl: /* [] */0
+    }
+  };
+  var result$1 = interpret$1(exprIr1);
+  console.log(result$1);
+  if (Caml_obj.equal(convert(exprIr0), exprIr1)) {
+    return ;
   }
-};
-
-var result$1 = interpret$1(exprIr1);
-
-console.log(result$1);
-
-if (!Caml_obj.equal(convert(exprIr0), exprIr1)) {
   throw {
         RE_EXN_ID: "Assert_failure",
         _1: [
           "Lab.res",
-          217,
-          0
+          222,
+          4
         ],
         Error: new Error()
       };
 }
 
+function test2(param) {
+  var exprIr0 = {
+    TAG: /* Let */6,
+    _0: "x",
+    _1: {
+      TAG: /* Cst */0,
+      _0: 1
+    },
+    _2: {
+      TAG: /* Let */6,
+      _0: "x1",
+      _1: {
+        TAG: /* Cst */0,
+        _0: 2
+      },
+      _2: {
+        TAG: /* Call */5,
+        _0: {
+          TAG: /* Fn */4,
+          _0: {
+            hd: "y",
+            tl: /* [] */0
+          },
+          _1: {
+            TAG: /* Add */2,
+            _0: {
+              TAG: /* Var */1,
+              _0: "y"
+            },
+            _1: {
+              TAG: /* Var */1,
+              _0: "x"
+            }
+          }
+        },
+        _1: {
+          hd: {
+            TAG: /* Cst */0,
+            _0: 10
+          },
+          tl: /* [] */0
+        }
+      }
+    }
+  };
+  var result = interpret(exprIr0);
+  console.log(result);
+  var exprIr1 = {
+    TAG: /* Let */6,
+    _0: {
+      TAG: /* Cst */0,
+      _0: 1
+    },
+    _1: {
+      TAG: /* Let */6,
+      _0: {
+        TAG: /* Cst */0,
+        _0: 2
+      },
+      _1: {
+        TAG: /* Call */5,
+        _0: {
+          TAG: /* Fn */4,
+          _0: {
+            TAG: /* Add */2,
+            _0: {
+              TAG: /* Var */1,
+              _0: 0
+            },
+            _1: {
+              TAG: /* Var */1,
+              _0: 2
+            }
+          }
+        },
+        _1: {
+          hd: {
+            TAG: /* Cst */0,
+            _0: 10
+          },
+          tl: /* [] */0
+        }
+      }
+    }
+  };
+  var result$1 = interpret$1(exprIr1);
+  console.log(result$1);
+  if (Caml_obj.equal(convert(exprIr0), exprIr1)) {
+    return ;
+  }
+  throw {
+        RE_EXN_ID: "Assert_failure",
+        _1: [
+          "Lab.res",
+          241,
+          4
+        ],
+        Error: new Error()
+      };
+}
+
+var Test = {
+  test1: test1,
+  test2: test2
+};
+
+test1(undefined);
+
+test2(undefined);
+
 export {
   Ir0 ,
   Ir1 ,
   Compiler ,
-  exprIr0 ,
-  exprIr1 ,
-  result$1 as result,
+  Test ,
 }
-/* result Not a pure module */
+/*  Not a pure module */

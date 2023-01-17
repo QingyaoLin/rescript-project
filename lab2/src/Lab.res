@@ -81,7 +81,10 @@ module Ir0 = {
       | Add(expr1, expr2) => vadd(eval(expr1, env), eval(expr2, env))
       | Mul(expr1, expr2) => vmul(eval(expr1, env), eval(expr2, env))
       | Fn(pars, body) => {
+          Js.log(env)
           let capture_env = capture(pars, env, body)
+
+          Js.log(capture_env)
           Vclosure(capture_env, pars, body)
         }
 
@@ -204,14 +207,40 @@ module Compiler = {
   }
 }
 
-// Ir0: fn(x) => x+x, fn(1)
-let exprIr0 = Ir0.Call(Fn(list{"x"}, Add(Var("x"), Var("x"))), list{Cst(1)})
-let result = Ir0.interpret(exprIr0)
-Js.log(result)
+module Test = {
+  let test1 = () => {
+    // Ir0: fn(x) => x+x, fn(1)
+    let exprIr0 = Ir0.Call(Fn(list{"x"}, Add(Var("x"), Var("x"))), list{Cst(1)})
+    let result = Ir0.interpret(exprIr0)
+    Js.log(result)
 
-// Ir1: Call( Fn(Add(Var(0), Var(0))), list{Cst(1)} )
-let exprIr1 = Ir1.Call(Fn(Add(Var(0), Var(0))), list{Cst(1)})
-let result = Ir1.interpret(exprIr1)
-Js.log(result)
+    // Ir1: Call( Fn(Add(Var(0), Var(0))), list{Cst(1)} )
+    let exprIr1 = Ir1.Call(Fn(Add(Var(0), Var(0))), list{Cst(1)})
+    let result = Ir1.interpret(exprIr1)
+    Js.log(result)
 
-assert (Compiler.convert(exprIr0) == exprIr1)
+    assert (Compiler.convert(exprIr0) == exprIr1)
+  }
+
+  // 测试环境捕获
+  let test2 = () => {
+    // Ir0: Let x = 1 in { Let x1 = 2 in { fn(y) => y + x, fn(10) } }
+    let exprIr0 = Ir0.Let(
+      "x",
+      Cst(1),
+      Let("x1", Cst(2), Call(Fn(list{"y"}, Add(Var("y"), Var("x"))), list{Cst(10)})),
+    )
+    let result = Ir0.interpret(exprIr0)
+    Js.log(result)
+
+    // Ir1: Let(Cst(1), Let(Cst(2), Call(Fn(Add(Var(0), Var(2))), list{Cst(10)})))
+    let exprIr1 = Ir1.Let(Cst(1), Let(Cst(2), Call(Fn(Add(Var(0), Var(2))), list{Cst(10)})))
+    let result = Ir1.interpret(exprIr1)
+    Js.log(result)
+
+    assert (Compiler.convert(exprIr0) == exprIr1)
+  }
+}
+
+Test.test1()
+Test.test2()
